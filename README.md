@@ -330,9 +330,6 @@ against the expected transcript line by line; it matches exactly.
 
 ## 5. Verification statement
 
-**[YOUR NOTES — read before signing. Do not sign this section until each statement is true
-for you.]**
-
 - I understand every line of the submitted code. I can explain what `readNumber` does when it
   encounters a fourth digit, why the scanner takes the maximal run of token characters instead
   of matching greedily, why the leading-zero check looks at digit count rather than value, and
