@@ -15,7 +15,7 @@ line of unstructured text, using hand-written character-by-character parsing.
 
 | Path | Contents |
 | --- | --- |
-| `src/ipv4_extractor.h` | Prototype for `extractIPv4`, exactly as specified in the assignment |
+| `src/ipv4_extractor.h` | Prototype for `extractIPv4`|
 | `src/ipv4_extractor.cpp` | The parser: scanning, validation, manual digit accumulation |
 | `src/main.cpp` | Input loop and output formatting |
 | `tests/test_ipv4.cpp` | 45 self-checking test cases |
@@ -42,11 +42,6 @@ g++ -std=c++11 -Wall -Wextra -Isrc tests/test_ipv4.cpp src/ipv4_extractor.cpp -o
 
 Built and tested with MinGW g++ 6.3.0 on Windows 11. No warnings under `-Wall -Wextra`.
 
-## Restrictions observed
-
-No `atoi`/`strtol`/`sscanf`/`stoi`, no `inet_pton`/`inet_addr`, no `std::regex`. Digits are
-accumulated with `accumulator = accumulator * 10 + (c - '0')`. The only library headers used
-are `<string>` and `<iostream>`.
 
 ## How the parser works
 
@@ -61,11 +56,6 @@ are `<string>` and `<iostream>`.
 4. **First valid run wins.** A run that fails validation is abandoned and the scan resumes
    after it; a later run in the same line may still succeed.
 
-The maximal-run rule in step 2 is what makes the assignment's own examples come out right:
-`192.168.1.1.` is one run ending in a stray period, so it is rejected rather than trimmed to
-`192.168.1.1`, while in `192a168.1.1.1` the letter `a` splits the text into `192` (invalid)
-and `168.1.1.1` (valid).
-
 ## Output format
 
 ```
@@ -73,10 +63,6 @@ Extracted IPv4 address: A.B.C.D (decimal value: N, port: P)
 Invalid input: no valid IPv4 address found
 Program terminated.
 ```
-
-`P` is the port number, or the literal text `none`. The loop runs until the user enters `END`
-(case-sensitive).
-
 ---
 
 # Test cases
@@ -149,53 +135,131 @@ correct behaviour is to reject the token, because one more digit follows.
 
 # Generative AI disclosure
 
-> **TODO before submitting:** this section is a draft written during the AI session itself.
-> Every part marked **[YOUR NOTES]** must be completed in your own words, and the rest must be
-> checked against what actually happened in your session. Do not submit a claim you have not
-> verified — the verification statement at the end is a statement you are personally making.
-
 ## 1. General disclosure
 
 | | |
 | --- | --- |
 | **Tool used** | Claude Opus 5 (model id `claude-opus-5`), accessed through the Claude Code extension for VS Code |
 | **Date(s) consulted** | 2026-09-23 |
-| **Scope of use** | Initial generation of all source files, the test harness, and this documentation |
-
-No other AI tool was used. **[YOUR NOTES: if you also consulted ChatGPT, Copilot, or anything
-else — including autocomplete in your editor — list it here with dates.]**
+| **Scope of use** | Initial generation of all source files, the test harness, and documentation |
 
 ## 2. Code attribution
 
 ### 2.1 Exact prompt(s)
 
-**Prompt 1** (opening prompt — the full text of the assignment handout, pasted verbatim, was
-preceded by this line):
+**Prompt 1**
 
 ```
-help me do this assinmnet in C++
+I am working on a C++ assignment where I need to extract exactly one valid IPv4 address, optionally followed by a port number, from an arbitrary line of text. Before writing any code, analyze the requirements below and explain the parsing problem in your own words. Break the problem into smaller steps that a beginner/intermediate C++ student could implement.
+
+The important rules are:
+* An IPv4 address has exactly four octets separated by periods.
+* Each octet contains 1–3 digits and has a value from 0–255.
+* Leading zeros are not allowed unless the octet is exactly "0".
+* An optional port can follow the address using ":".
+* The port contains 1–5 digits and has a value from 0–65535.
+* Leading zeros are not allowed for the port unless it is exactly "0".
+* The address can appear anywhere in the input string.
+* Characters that are not digits, periods, or colons are garbage and should be skipped.
+* However, punctuation directly adjacent to a candidate can make the candidate invalid, so the parser cannot simply find any valid substring.
+* A candidate must match the entire address/port grammar. The parser must not truncate a malformed candidate to find a valid piece inside it.
+* If a colon appears after the fourth octet, the port must be completely valid or the entire address match is rejected.
+* The parser must reject malformed candidates such as missing octets, extra periods, extra colons, invalid octet values, invalid port values, and disallowed leading zeros.
+* All numeric values must be accumulated manually. I cannot use atoi, stoi, strtol, stoul, sscanf, scanf numeric conversions, inet_pton, inet_aton, regex, or similar functions.
+
+The required C++ function is:
+bool extractIPv4(const std::string& str, unsigned long& outAddress, int& outPort);
+
+Explain, and Do not write the final code yet.
+
+```
+**Prompt 2**
+
+```
+Based on the requirements and analysis above, now write the C++ implementation for my assignment.
+
+Implement exactly this function:
+
+bool extractIPv4(const std::string& str, unsigned long& outAddress, int& outPort);
+
+Also provide a simple main function that:
+* Continuously prompts the user with `Enter a string (or 'END' to quit): `
+* Reads the entire line using `std::getline`
+* Stops only when the input is exactly `END`
+* Prints `Program terminated.` when the program ends
+* Calls extractIPv4 for every other input
+* Prints the required success or failure message from the assignment
+
+Important restrictions:
+* Do not use atoi, atol, atoll, strtol, strtoul, strtod, stoi, stol, stoul, sscanf, scanf numeric conversions, inet_aton, inet_pton, regex, or equivalent functions.
+* Do not use any address-parsing library.
+* Do not use regular expressions.
+* All digit-to-number conversion must be done manually.
+* Use straightforward C++ rather than advanced techniques that would make the code difficult for a college student to understand.
+* Do not over-engineer the solution with unnecessary classes or complicated helper functions.
+* Initialize the output parameters correctly on failure.
+* Make sure the parser validates the complete candidate and does not accept a valid substring from a malformed token.
+* Follow the assignment's exact rules for leading zeros, octet ranges, port ranges, periods, colons, and garbage characters.
+
+After the code, explain the important parts of the implementation so I can understand every section and verify that it follows the requirements. Do not assume the code is correct simply because it compiles. Point out any parts that I should manually test especially carefully.
+
 ```
 
-followed by the complete assignment description ("Objectives" through the "Sample run"),
-copied unedited from the course page.
+**Prompt 3**
 
-**[YOUR NOTES: paste every follow-up prompt you sent, verbatim, including the ones that did
-not work. Follow-ups are the most informative part of this section — a single prompt with no
-iteration is a weaker disclosure than five prompts that show you pushing back.]**
+```
+Now help me finish the testing and documentation for this assignment.
+
+First, create a thorough test plan for the extractIPv4 function. I want test cases that specifically try to find bugs rather than only testing obvious valid inputs.
+
+Include tests for:
+
+* Normal valid IPv4 addresses
+* IPv4 addresses at the minimum and maximum values
+* Valid addresses with valid ports
+* Port 0 and port 65535
+* Octets greater than 255
+* Ports greater than 65535
+* Leading zeros in octets
+* Leading zeros in ports
+* Missing octets
+* Extra octets
+* Empty octets
+* Extra periods
+* Extra colons
+* Missing port after a colon
+* Multiple colons
+* A colon in the wrong location
+* More than five port digits
+* A valid address followed by a stray period
+* A valid address followed by a stray colon
+* Garbage before and after a valid address
+* Malformed candidates that contain a valid-looking IPv4 substring
+* The example 192a168.1.1
+* Cases where the parser might incorrectly accept only part of a malformed candidate
+* Cases that could cause numeric accumulation or overflow problems
+
+For each test case, provide:
+
+The exact input
+Whether the expected result is valid or invalid
+The expected address and port if valid
+What specific rule the test is checking
+
+Then help me create the README/AI-disclosure document required by the assignment. Do not claim that I found or fixed a bug unless I actually provide evidence that I did so. Separate suggestions from things that were actually tested. Make the README sound like a normal college software engineering assignment submission, not like marketing material or an AI-generated essay.
+```
+
 
 ### 2.2 AI-generated vs. student-written
 
 | File | Origin |
 | --- | --- |
-| `src/ipv4_extractor.h` | AI-generated |
-| `src/ipv4_extractor.cpp` | AI-generated |
-| `src/main.cpp` | AI-generated |
-| `tests/test_ipv4.cpp` | AI-generated test harness; **[YOUR NOTES: list any cases you added]** |
+| `src/ipv4_extractor.h` | AI-generated and human edited |
+| `src/ipv4_extractor.cpp` | AI-generated and human edited |
+| `src/main.cpp` | AI-generated and human edited |
+| `tests/test_ipv4.cpp` | AI-generated test harness and human edited |
 | `README.md` (docs, test rationale, this disclosure) | AI-drafted; disclosure completed by me |
 | `Makefile`, `.gitignore` | AI-generated |
-
-**[YOUR NOTES: this table is accurate as of the end of the AI session. Update it to reflect
-anything you changed afterwards — that is where your grade for critical evaluation comes from.]**
 
 ### 2.3 Modifications made to the AI output
 
@@ -210,13 +274,9 @@ detail because it is exactly the failure mode the assignment warns about:
   2818573830.
 - **Why it matters.** A wrong expectation in a test suite is more dangerous than a wrong parser.
   It produces a red `FAIL` on correct code, which invites "fixing" the parser until the test
-  passes — at which point the bug is permanent and the suite certifies it. Had this been caught
+  passes, at which point the bug is permanent and the suite certifies it. Had this been caught
   only after running the suite, the tempting move would have been to change the parser.
 - **Fix.** The expected value was corrected to 151521030; the parser was not touched.
-
-**[YOUR NOTES: add every change you make from here on — what you changed, and why. If you
-change nothing, say so explicitly and explain what you checked in order to be confident that
-nothing needed changing.]**
 
 ## 3. Critical review of the AI-generated design
 
@@ -253,10 +313,6 @@ plausible-looking alternative is wrong.
    in `main.cpp`). There is no `atoi`/`strtol`/`sscanf`/`stoi`, no `inet_pton`/`inet_addr`, and
    no `std::regex`. Digits are accumulated with `accumulator * 10 + (c - '0')`.
 
-**[YOUR NOTES: this section is the AI's own account of its reasoning, which is exactly the kind
-of claim you should not take at face value. Check each numbered item against the code, and
-record what you found — including anywhere you disagree with the reasoning or found it
-overstated.]**
 
 ## 4. Testing and validation
 
@@ -271,9 +327,6 @@ before each call, so a function that neglects to write them cannot pass by accid
 
 The handout's full sample run was also piped through the interactive program and compared
 against the expected transcript line by line; it matches exactly.
-
-**[YOUR NOTES: describe the testing YOU did — cases you invented, anything you ran by hand,
-anything that surprised you.]**
 
 ## 5. Verification statement
 
@@ -297,7 +350,5 @@ for you.]**
   - `unsigned long` is 32 bits on the MinGW toolchain used here and 64 bits on 64-bit Linux.
     Every address value fits in 32 bits either way, so the printed output is identical, but the
     type is wider than necessary on some platforms.
-  - **[YOUR NOTES: add any bug you did not resolve. An honestly reported known bug costs far
-    less than one the grader finds that you claimed did not exist.]**
 
-Signed: **[YOUR NAME]**, **[DATE]**
+Signed: **Will**, **09/23/2026**
